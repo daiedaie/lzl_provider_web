@@ -11,7 +11,7 @@
                    <p slot="title">
                         <Icon type="mouse"></Icon>
                         	点击搜索进行搜索
-                        	<a href="#" slot="extra" @click.prevent="toPost"  style="margin: 0 40px;float:right">
+                        	<a href="#" slot="extra" @click.prevent="toPost" style="margin: 0 40px;">
             					<Icon type="android-add-circle"></Icon>
 					                                     新增
 					        </a>

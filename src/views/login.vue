@@ -39,12 +39,12 @@
 
 <script>
 import Cookies from 'js-cookie';
-import * as userLogin from "../api/system/system-admin";
+import * as userLogin from "../api/provider/provider-user";
 export default {
     data () {
         return {
             form: {
-                userName: 'admin',
+                userName: 'operator',
                 password: ''
             },
             rules: {
@@ -61,7 +61,7 @@ export default {
         handleSubmit () {
             this.$refs.loginForm.validate((valid) => {
                 if (valid) {
-                    userLogin.login.r({name:this.form.userName,password:this.form.password}).then(res => {    
+                    userLogin.login.r({username:this.form.userName,password:this.form.password}).then(res => {    
                         Cookies.set('user', this.form.userName);
                         Cookies.set('password', this.form.password);
                         this.$store.commit('setAvator', 'https://ss1.bdstatic.com/70cFvXSh_Q1YnxGkpoWK1HF6hhy/it/u=3448484253,3685836170&fm=27&gp=0.jpg');
