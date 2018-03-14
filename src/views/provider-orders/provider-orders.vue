@@ -1,6 +1,6 @@
 <style lang="less">
 @import "../../styles/common.less";
-@import "../../styles/table.less";
+@import "./components/table.less";
 </style>
 
 <template>
@@ -10,7 +10,7 @@
                 <Card>
                     <p slot="title">
                         <Icon type="mouse"></Icon>
-                        点击搜索进行搜索
+                        	点击搜索进行搜索
                     </p>
                     <Row>
                         <Input v-model="searchOrderSn" placeholder="请输入订单编号..." class="search-table" />
@@ -23,7 +23,8 @@
                     </Row>
                     <!--<Row class="margin-top-10 searchable-table-con1">-->
                     <Row class="margin-top-10" style="stripe">
-                        <Table :columns="columns" :data="data" ref="tableCsv"></Table>
+                        <can-edit-table :loading="loading" @on-service="service" v-model="data" :columns-list="columns"></can-edit-table>
+                        <!-- <Table :loading="loading" :columns="columns" :data="data" ref="tableCsv"></Table> -->
                     </Row>
                     <Row class="margin-top-10">
                         <Page :total="total" show-elevator :page-size='pageSize' :current='pageIndex' class="page" show-total  show-sizer @on-change="changepage" @on-page-size-change="changeSize"></Page>
@@ -40,11 +41,18 @@
 <script>
 import * as table from "./data/search";
 import instance from '../../api/index';
+import canEditTable from './components/canEditTable.vue';
+import refundService from './components/refundService.vue';
 import * as providerOrdersAPI from "../../api/provider-orders";
 export default {
   name: "provider-orders",
+  components: {
+      canEditTable,
+      refundService
+  },
   data() {
     return {
+      loading:true,
       total: 0,
       pageIndex: 1,
       pageSize: 10,
@@ -112,6 +120,7 @@ export default {
     },
     //请求数据
     handleSearch() {
+      this.loading = true;
       //request参数处理
       let params = {
         pageIndex: this.pageIndex,
@@ -132,6 +141,7 @@ export default {
             this.pageIndex=1;
         }
         this.total = parseInt(res.headers.total);
+        this.loading = false;
         console.log("总记录数:" + res.headers.total);
       });
     },
@@ -150,6 +160,14 @@ export default {
         this.searchStartDate = value[0];
         this.searchEndDate = value[1];
     },
+    
+    //售后服务
+    service (val,index) {
+      let orderSn = val[index].orderSn;
+      // router已作为一个全局变量放入到this(vm)中了
+      this.$router.push({ name: 'service', params: { 'orderSn': orderSn }});
+    },
+    
     exportData (type) {
         // this.$refs.tableCsv.exportCsv({
         //     filename: '数据导出',
@@ -158,13 +176,13 @@ export default {
       //request参数处理
       let params = {
         orderSn: this.searchOrderSn,
-        sellerMobile: this.searchSellerMobile,
-        orderState: this.searchOrderState,
+        //sellerMobile: this.searchSellerMobile,
+        orderStatus: this.searchOrderStatus,
         startTime:this.searchStartDate,
         endTime:this.searchEndDate
       };
       //response数据处理
-      orderAPI.down.r(params).then(res => {
+      providerOrdersAPI.down.r(params).then(res => {
     　　var blob = new Blob([res.data], {type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=utf-8'}); //application/vnd.openxmlformats-officedocument.spreadsheetml.sheet这里表示xlsx类型
     　　var downloadElement = document.createElement('a');
     　　var href = window.URL.createObjectURL(blob); //创建下载的链接

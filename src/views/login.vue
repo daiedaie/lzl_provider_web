@@ -3,6 +3,7 @@
 </style>
 
 <template>
+	<!-- 此处@keydown.enter的原理是dom元素的事件冒泡 -->
     <div class="login" @keydown.enter="handleSubmit">
         <div class="login-con">
             <Card :bordered="false">
@@ -44,7 +45,7 @@ export default {
     data () {
         return {
             form: {
-                userName: 'operator',
+                userName: 'operatorTest',
                 password: ''
             },
             rules: {
@@ -66,6 +67,8 @@ export default {
                         Cookies.set('password', this.form.password);
                         this.$store.commit('setAvator', 'https://ss1.bdstatic.com/70cFvXSh_Q1YnxGkpoWK1HF6hhy/it/u=3448484253,3685836170&fm=27&gp=0.jpg');
                         Cookies.set('access', res.data.urls);
+                        // userLogin.login登陆请求到后台，后台传递参数到前台，参数包括userName、password、登陆用户的urls
+                        // 然后前台跳转到home_index页面
                         this.$router.push({
                             name: 'home_index'
                         });

@@ -41,7 +41,8 @@ util.oneOf = function (ele, targetArr) {
 };
 
 util.showThisRoute = function (itAccess, currentAccess) {
-    if (typeof itAccess === 'object' && Array.isArray(itAccess)) {
+    // @Lgq 该if中的判断根本就用不到，因为每个router的access都是一个字符串
+	if (typeof itAccess === 'object' && Array.isArray(itAccess)) {
         return util.oneOf(currentAccess, itAccess);
     } else {
         //return itAccess === currentAccess;

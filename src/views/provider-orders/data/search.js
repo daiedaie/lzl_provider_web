@@ -1,11 +1,64 @@
 export const columns = [
-    /*
 	{
-        key: 'id',
-        title: '序号'
+        type: 'expand',
+        width: 50,
+        render: (h, params) => {
+            let children = [];
+            let data = params.row.ordersGoods;
+            let totalMoney = 0;
+            
+            for(let i=0;i<data.length;i++){
+                let childrenRow = [];
+                
+                let childrenCol1 = [];
+                let childrenCol2 = [];
+                let childrenCol3 = [];
+                let childrenCol4 = [];
+                //span是不换行的，可以连续span。
+                childrenCol1.push(h('span','名称：'));
+                childrenCol1.push(h('span',data[i].goodsName));
+                childrenCol2.push(h('span','单价：'));
+                childrenCol2.push(h('span',data[i].moneyPrice + '元'));
+                childrenCol3.push(h('span','数量：'));
+                childrenCol3.push(h('span',data[i].number));
+                
+                totalMoney += data[i].moneyPrice * data[i].number;
+                
+                childrenRow.push(h('Col', {
+                    props: {
+                    	//设定每列的长度span:7
+                    	span:7
+                    }
+                    },childrenCol1));
+                childrenRow.push(h('Col', {
+                    props: {
+                        span:7
+                    }
+                    },childrenCol2));
+                childrenRow.push(h('Col', {
+                    props: {
+                        span:7
+                    }
+                    },childrenCol3));
+                
+                if(i+1 === data.length){
+                	childrenCol4.push(h('span','总金额：'));
+                    childrenCol4.push(h('span',totalMoney + '元'));
+                    
+                    childrenRow.push(h('Col', {
+	                    props: {
+	                        span:21
+	                    }
+                    },childrenCol4));
+                }
+                
+                children.push(h('row',childrenRow));
+            }
+            totalMoney = 0;
+            return h('div', children);
+        }
     },
-    */
-    {
+	{
         key: 'orderSn',
         title: '订单编号'
     },
@@ -33,7 +86,11 @@ export const columns = [
     },
     {
         key: 'invoiceStatus',
-        title: '是否开票'
+        title: '有无发票',
+        render: (h, params) => {
+        	let state = params.row.invoiceStatus;
+        	return h('label', state===1?'有':'无');
+        }
     },
     {
         key: 'paymentName',
@@ -80,6 +137,13 @@ export const columns = [
     {
         key: 'remark',
         title: '订单备注'
+    },
+    {
+    	key: 'handle',
+        title: '操作',
+        align: 'center',
+        width: 120,
+        handle: ['service']
     }
 ];
 

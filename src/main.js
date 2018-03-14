@@ -9,10 +9,14 @@ import 'iview/dist/styles/iview.css';
 import VueI18n from 'vue-i18n';
 import util from './libs/util';
 
-Vue.use(VueI18n);
-Vue.use(iView);
 //Vue.component('Message',iView.Message);
 //Vue.prototype.$Message = iView.Message;
+Vue.use(VueI18n);
+Vue.use(iView);
+global.IMGURL = 'http://test.724h.com/file/images/'
+global.TIMEOUT = 50000
+global.UPLOAD_TIMEOUT = 60000
+global.TABLE_HEIGHT = 294
 
 new Vue({
     el: '#app',

@@ -70,7 +70,8 @@ export default {
           title: "操作",
           type: "action",
           actions: true,
-          width: "100"
+          width: "100",
+          align:"center"
         }
       ],
       data: []
@@ -87,8 +88,8 @@ export default {
       let params = {
         pageIndex: this.pageIndex,
         pageSize: this.pageSize,
-        isGetCount: true,
-        name: this.searchName
+        isGetCount: true
+        //name: this.searchName
       };
       //response数据处理
       api.get.r(params).then(res => {

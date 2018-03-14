@@ -1,3 +1,4 @@
+//var webpack = require('webpack');下面有了，无需再添加
 const path = require('path');
 const os = require('os');
 const webpack = require('webpack');
@@ -16,6 +17,15 @@ module.exports = {
     output: {
         path: path.resolve(__dirname, '../dist/dist')
     },
+    // 添加代码
+    plugins: [
+      new webpack.ProvidePlugin({
+	    $: "jquery",
+	    jQuery: "jquery",
+	    jquery: "jquery",
+	    "window.jQuery": "jquery"
+      })
+    ],
     module: {
         rules: [
             {
