@@ -1,14 +1,16 @@
 <style lang="less">
-    @import '../../../styles/editable-table.less';
+    @import './editable-table.less';
 </style>
 
 <template>
     <div>
-        <Table :height="tableHeight" highlight-row ref="refs" :columns="columnsList" :data="thisTableData"  border disabled-hover></Table>
+        <Table :loading="loading" :ref="refs" :columns="columnsList" :data="thisTableData"  border disabled-hover></Table>
     </div>
 </template>
 
 <script>
+import refundService from './refundService.vue';
+
 const editButton = (vm, h, currentRow, index) => {
     return h('Button', {
         props: {
@@ -27,6 +29,7 @@ const editButton = (vm, h, currentRow, index) => {
                             vm.edittingStore[index].edittingCell[name] = false;
                         }
                     }
+                    //当点击编辑时，赋予该行编辑状态的一些属性
                     vm.edittingStore[index].editting = true;
                     vm.thisTableData = JSON.parse(JSON.stringify(vm.edittingStore));
                 } else {
@@ -43,16 +46,17 @@ const editButton = (vm, h, currentRow, index) => {
         }
     }, currentRow.editting ? '保存' : '编辑');
 };
-const checkButton = (vm, h, currentRow, index) => {
+
+const serviceButton = (vm, h, currentRow, index) => {
     return h('Poptip', {
         props: {
             confirm: true,
-            title: '您确定要此操作吗?',
+            title: '您确定要售后服务吗?',
             transfer: true
         },
         on: {
             'on-ok': () => {
-                vm.$emit('on-check', vm.handleBackdata(vm.thisTableData), index);
+                vm.$emit('on-service', vm.handleBackdata(vm.thisTableData), index);
             }
         }
     }, [
@@ -64,53 +68,10 @@ const checkButton = (vm, h, currentRow, index) => {
                 type: 'error',
                 placement: 'top'
             }
-        }, '审核')
+        }, '售后服务')
     ]);
 };
 
-const checkLabel = (vm, h, state) => {
-	return h('label', state==0?'未通过':'已通过');
-};
-
-const deleteButton = (vm, h, currentRow, index) => {
-    return h('Poptip', {
-        props: {
-            confirm: true,
-            title: '您确定要删除这条数据吗?',
-            transfer: true
-        },
-        on: {
-            'on-ok': () => {
-                vm.$emit('on-delete', vm.handleBackdata(vm.thisTableData), index);
-            }
-        }
-    }, [
-        h('Button', {
-            style: {
-                margin: '0 5px'
-            },
-            props: {
-                type: 'error',
-                placement: 'top'
-            }
-        }, '删除')
-    ]);
-};
-const permissionButton = (vm, h, currentRow, index) => {
-    return h('Button', {
-        props: {
-            type: 'warning'
-        },
-        style: {
-            margin: '0 5px'
-        },
-        on: {
-            'click': () => {
-                vm.$emit('on-resources', vm.handleBackdata(vm.thisTableData), index);
-            }
-        }
-    }, '分配权限');
-};
 const incellEditBtn = (vm, h, param) => {
     if (vm.hoverShow) {
         return h('div', {
@@ -123,6 +84,7 @@ const incellEditBtn = (vm, h, param) => {
                     type: 'text',
                     icon: 'edit'
                 },
+                //那些可编辑状态的属性的设置，就是在这样的onclick事件中设置或修改的
                 on: {
                     click: (event) => {
                         vm.edittingStore[param.index].edittingCell[param.column.key] = true;
@@ -137,6 +99,7 @@ const incellEditBtn = (vm, h, param) => {
                 type: 'text',
                 icon: 'edit'
             },
+          	//那些可编辑状态的属性的设置，就是在这样的onclick事件中设置或修改的
             on: {
                 click: (event) => {
                     vm.edittingStore[param.index].edittingCell[param.column.key] = true;
@@ -179,21 +142,47 @@ const cellInput = (vm, h, param, item) => {
 const cellOption = (h, param) => {
     return h('Option', {
         props: {
-            value: param.id
+            value: param.goodsTypeId
         },
         attrs: {
-            label:param.rolesName
+            label:param.goodsTypeName
+        },
+    });
+};
+const cellOptionRepository = (h, param) => {
+    return h('Option', {
+        props: {
+            value: param.repositoryId
+        },
+        attrs: {
+            label:param.repositoryName
+        },
+    });
+};
+const cellOptionProvider = (h, param) => {
+    return h('Option', {
+        props: {
+            value: param.providerId
+        },
+        attrs: {
+            label:param.providerName
         },
     });
 };
 export default {
     name: 'canEditTable',
+    components: {
+        refundService
+    },
     props: {
+        loading : Boolean,
         refs: String,
         columnsList: Array,
         value: Array,
         url: String,
         roles:Array,
+        repositories:Array,
+        providers:Array,
         editIncell: {
             type: Boolean,
             default: false
@@ -201,66 +190,14 @@ export default {
         hoverShow: {
             type: Boolean,
             default: false
-        },
-        taxRate:Array,
-        provider:Array
+        }
     },
     data () {
         return {
-            tableHeight: 650, 
             columns: [],
             thisTableData: [],
-            edittingStore: [],
-            
-            cascaderText: '未选择',
-            
-            data: [{
-                value: 'beijing',
-                label: '北京',
-                children: [
-                    {
-                        value: 'gugong',
-                        label: '故宫'
-                    },
-                    {
-                        value: 'tiantan',
-                        label: '天坛'
-                    },
-                    {
-                        value: 'wangfujing',
-                        label: '王府井'
-                    }
-                ]
-            }, {
-                value: 'jiangsu',
-                label: '江苏',
-                children: [
-                    {
-                        value: 'nanjing',
-                        label: '南京',
-                        children: [
-                            {
-                                value: 'fuzimiao',
-                                label: '夫子庙',
-                            }
-                        ]
-                    },
-                    {
-                        value: 'suzhou',
-                        label: '苏州',
-                        children: [
-                            {
-                                value: 'zhuozhengyuan',
-                                label: '拙政园',
-                            },
-                            {
-                                value: 'shizilin',
-                                label: '狮子林',
-                            }
-                        ]
-                    }
-                ],
-            }]
+            edittingStore: []
+            //loading:true
         };
     },
     created () {
@@ -269,6 +206,7 @@ export default {
     methods: {
         init () {
             let vm = this;
+            //获取search中定义的所有可编辑的column，将这些列放入到数组editableCell中
             let editableCell = this.columnsList.filter(item => {
                 if (item.editable) {
                     if (item.editable === true) {
@@ -276,7 +214,9 @@ export default {
                     }
                 }
             });
+            //将所有的表格数据复制一份，复杂成json的形式
             let cloneData = JSON.parse(JSON.stringify(this.value));
+            //获取所有正在编辑的row，并将他们都放入到res数组中
             let res = [];
             res = cloneData.map((item, index) => {
                 let isEditting = false;
@@ -303,10 +243,13 @@ export default {
                     return item;
                 }
             });
+            //将正在编辑的row行存储到edittingStore数组中
             this.thisTableData = res;
             this.edittingStore = JSON.parse(JSON.stringify(this.thisTableData));
+            //处理search中定义的每一列，对每一列进行遍历，item就是一个具体的某一列
             this.columnsList.forEach(item => {
-                if (item.editable) {
+                //如果该列是可编辑的，则将其显示为编辑状态
+            	if (item.editable) {
                     item.render = (h, param) => {
                         let currentRow = this.thisTableData[param.index];
                         if (!currentRow.editting) {
@@ -352,95 +295,161 @@ export default {
                         }
                     };
                 }
+                //显示操作列
                 if (item.handle) {
+                	//表示在当前列进行render，以下return都是对当前列的渲染
                     item.render = (h, param) => {
                         let currentRowData = this.thisTableData[param.index];
                         let children = [];
                         item.handle.forEach(item => {
-                            if (item === 'permission') {
-                                children.push(permissionButton(this, h, currentRowData, param.index));
-                            } else if (item === 'edit') {
+                            if (item === 'edit') {
                                 children.push(editButton(this, h, currentRowData, param.index));
-                            } else if (item === 'delete') {
-                                children.push(deleteButton(this, h, currentRowData, param.index));
-                            }else if(item === 'check'){
-                            	let state = currentRowData.orderStatus;
-                            	if(state == -1){
-                            		children.push(checkButton(this, h, currentRowData, param.index));
-                            	}else{
-	                            	children.push(checkLabel(this, h, state));
-                            	}
+                            } else if (item === 'service') {
+                                children.push(serviceButton(this, h, currentRowData, param.index));
                             }
-                        }); 
+                        });
                         return h('div', children);
-                    }; 
+                    };
                 }
-                if (item.label) {
-                    item.render = (h, param) => {
-                        let currentRowData = this.thisTableData[param.index];
-                        let providerId = currentRowData.providerId;
-                        let status = currentRowData.orderStatus;
-                        
-                        if(status == -1 || status == 0){
-                        	return h('label', '未选择');
-                        }else{
-                        	if(providerId == -1){
-                            	return h('label', '未选择');
-                            }else if(providerId == 0){
-                            	return h('label', '附近实仓');
-                            }else{
-                            	let providerName = "";
-                            	for(let i=0; i<this.provider.length; i++){
-                            		if(providerId == this.provider[i].providerId){
-                            			providerName = this.provider[i].providerName;
-                            		}
-                            	}
-                            	return h('label', providerName);
-                            }
-                        }
-                    }; 
-                }
-                //下拉选择
+                //显示select列
                 if (item.options) {
+                	//表示在当前列进行render，以下return都是对当前列的渲染
                     item.render = (h, param) => {
+                    	//获取该行数据
                         let currentRow = this.thisTableData[param.index];
+                        let goodsTypeNameSelect = '';
+                        this.roles.forEach(role => {
+                        	//该item就是每一列
+                            if (role.goodsTypeId === currentRow[item.key]) {
+                                goodsTypeNameSelect = role.goodsTypeName;
+                            }
+                        });
                         if (!currentRow.editting) {
-                            return h('span', currentRow[item.key]);
+                            return h('span', goodsTypeNameSelect);
                         } else {
+                        	//index对应所操作的行，以下为获取所操作行的数据
                             let currentRowData = this.thisTableData[param.index];
                             let children = [];
                             this.roles.forEach(item => {
-                                children.push(cellOption(h, item));
+                            	//该处的item为每个role，该role是一个Roles对象，里面有Roles对象的所有属性
+                                //children中放入的是option选项，cellOption方法对当前列也进行了下拉选项的渲染
+                            	children.push(cellOption(h, item));
                             });
                             return h('Select',
                                     {
                                         attrs:{
-                                            placeholder:currentRowData.roleName
+                                            placeholder:goodsTypeNameSelect
                                         },
                                         on: {
                                             'on-change' (event) {
-                                                vm.edittingStore[param.index]['roleId'] = event;
+                                                vm.edittingStore[param.index]['goodsTypeId'] = event;
                                             }
                                         }
                                     }, 
+                                    //children中就是cellOption方法渲染的所有下来选项
                                     children
                             );
                         }
                     };
                 }
+                //显示repositories对应的select列
+                if (item.RepositoryOptions) {
+                	//表示在当前列进行render，以下return都是对当前列的渲染
+                    item.render = (h, param) => {
+                    	//获取该行数据
+                        let currentRow = this.thisTableData[param.index];
+                        let repositoryNameSelect = '';
+                        this.repositories.forEach(repository => {
+                        	//该item就是每一列
+                            if (repository.repositoryId === currentRow[item.key]) {
+                            	repositoryNameSelect = repository.repositoryName;
+                            }
+                        });
+                        if (!currentRow.editting) {
+                            return h('span', repositoryNameSelect);
+                        } else {
+                        	//index对应所操作的行，以下为获取所操作行的数据
+                            let currentRowData = this.thisTableData[param.index];
+                            let children = [];
+                            this.repositories.forEach(repository => {
+                            	//该处的item为每个role，该role是一个Roles对象，里面有Roles对象的所有属性
+                                //children中放入的是option选项，cellOption方法对当前列也进行了下拉选项的渲染
+                            	children.push(cellOptionRepository(h, repository));
+                            });
+                            return h('Select',
+                                    {
+                                        attrs:{
+                                            placeholder:repositoryNameSelect
+                                        },
+                                        on: {
+                                            'on-change' (event) {
+                                                vm.edittingStore[param.index]['repositoryId'] = event;
+                                            }
+                                        }
+                                    }, 
+                                    //children中就是cellOption方法渲染的所有下来选项
+                                    children
+                            );
+                        }
+                    };
+                }
+                //显示Provider对应的select列
+                if (item.ProviderOptions) {
+                	//表示在当前列进行render，以下return都是对当前列的渲染
+                    item.render = (h, param) => {
+                    	//获取该行数据
+                        let currentRow = this.thisTableData[param.index];
+                        let providerNameSelect = '';
+                        this.providers.forEach(provider => {
+                        	//该item就是每一列
+                            if (provider.providerId === currentRow[item.key]) {
+                            	providerNameSelect = provider.providerName;
+                            }
+                        });
+                        if (!currentRow.editting) {
+                            return h('span', providerNameSelect);
+                        } else {
+                        	//index对应所操作的行，以下为获取所操作行的数据
+                            let currentRowData = this.thisTableData[param.index];
+                            let children = [];
+                            this.providers.forEach(provider => {
+                            	//该处的item为每个role，该role是一个Roles对象，里面有Roles对象的所有属性
+                                //children中放入的是option选项，cellOption方法对当前列也进行了下拉选项的渲染
+                            	children.push(cellOptionProvider(h, provider));
+                            });
+                            return h('Select',
+                                    {
+                                        attrs:{
+                                            placeholder:providerNameSelect
+                                        },
+                                        on: {
+                                            'on-change' (event) {
+                                                vm.edittingStore[param.index]['providerId'] = event;
+                                            }
+                                        }
+                                    }, 
+                                    //children中就是cellOption方法渲染的所有下来选项
+                                    children
+                            );
+                        }
+                    };
+                }
+                //显示status状态列
                 if (item.status) {
                     item.render = (h, param) => {
                         let currentRow = this.thisTableData[param.index];
                         let state = currentRow[item.key];
                         // let stateName = state===1?'正常':(state===2?'冻结':'删除');
-                        let stateName = state===1?'正常':'冻结';
+                        let stateName = state===1?'正常出售':'下架商品';
                         if (!currentRow.editting) {
                             let state = currentRow[item.key];
                             return h('label', stateName);
                         } else {
                             let currentRowData = this.thisTableData[param.index];
                             let children = [];
-                            let statusArray = [{"id":"1","rolesName":"正常"},{"id":"2","rolesName":"冻结"}];
+                            //id和rolesName只是一个标识，因为cellOption函数中指定的param中的属性就是id和rolesName
+                            //为了能够复用(和角色Roles),所以就统统都用这两个变量了
+                            let statusArray = [{"goodsTypeId":"1","goodsTypeName":"正常出售"},{"goodsTypeId":"0","goodsTypeName":"下架商品"}];
                             statusArray.forEach(item => {
                                 children.push(cellOption(h, item));
                             });
@@ -460,8 +469,48 @@ export default {
                         }
                     };
                 }
+                /* 
+              	//显示下架时间状态列
+                if (item.invalidDate) {
+                    item.render = (h, param) => {
+                        let currentRow = this.thisTableData[param.index];
+                        //根据key来获取该列的值
+                        let state = currentRow[item.key];
+                        // let stateName = state===1?'正常':(state===2?'冻结':'删除');
+                        let stateName = state===null?'--':state;
+                        if (!currentRow.editting) {
+                            let state = currentRow[item.key];
+                            return h('label', stateName);
+                        } else {
+                            let currentRowData = this.thisTableData[param.index];
+                            let children = [];
+                            //id和rolesName只是一个标识，因为cellOption函数中指定的param中的属性就是id和rolesName
+                            //为了能够复用(和角色Roles),所以就统统都用这两个变量了
+                            let statusArray = [{"goodsTypeId":null,"goodsTypeName":"--"},{"goodsTypeId":"","goodsTypeName":state}];
+                            statusArray.forEach(item => {
+                                children.push(cellOption(h, item));
+                            });
+                            return h('Select',
+                                    {
+                                        attrs:{
+                                            placeholder:stateName
+                                        },
+                                        on: {
+                                            'on-change' (event) {
+                                                vm.edittingStore[param.index]['invalidDate'] = event;
+                                            }
+                                        }
+                                    }, 
+                                    children
+                            );
+                        }
+                    };
+                }
+                 */
             });
         },
+        //修改后点击保存或点击删除，则将处理后的数据进行返回。
+        //将该行的一些编辑状态的属性删除，然后该行就能像其他行一样正常显示了
         handleBackdata (data) {
             let clonedData = JSON.parse(JSON.stringify(data));
             clonedData.forEach(item => {
@@ -472,12 +521,9 @@ export default {
             return clonedData;
         }
     },
-    mounted() {  
-        // 设置表格高度  
-        this.tableHeight = window.innerHeight - this.$refs.refs.$el.offsetTop -TABLE_HEIGHT
-    },  
     watch: {
-        value (data) {
+       	//观察value的值，当value值变化时，就调用初始化函数
+    	value (data) {
             this.init();
         }
     }

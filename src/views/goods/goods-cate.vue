@@ -212,6 +212,7 @@ export default {
     	//将levelCopy置空，不使edit的回显内容显示
     	this.levelCopy = "";
     	this.formItem = {};
+    	this.imgName = "";
     	this.formItem.pid = this.levelType;
     	this.titlePostOrPut = "新增";
     	this.modalPostOrPut=true;

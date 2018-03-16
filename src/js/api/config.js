@@ -26,6 +26,10 @@ global.URL_PRESELL = 'presell'
 global.URL_TAXRATE = 'taxRate'
 global.URL_REPOSITORY = 'repository'
 global.URL_GOODSCATE = 'goodsCate'
+global.URL_GOODSATTRIBUTE = 'goodsAttribute'
+global.URL_REPOSITORY = 'repository'
+global.URL_PROVIDERORDERS = 'providerOrders'
+global.URL_PROVIDERS = 'providers'
 
 const instance = axios.create({
   baseURL: PROJECT_URL,

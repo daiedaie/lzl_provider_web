@@ -47,6 +47,10 @@ const editButton = (vm, h, currentRow, index) => {
     }, currentRow.editting ? '保存' : '编辑');
 };
 
+const serviceLabel = (vm, h, state) => {
+	return h('label', state==-1?'待审核':(state==0?'未通过':(state==1?'已通过':(state==2?'未付款':'已取消'))));
+};
+
 const serviceButton = (vm, h, currentRow, index) => {
     return h('Poptip', {
         props: {
@@ -305,7 +309,12 @@ export default {
                             if (item === 'edit') {
                                 children.push(editButton(this, h, currentRowData, param.index));
                             } else if (item === 'service') {
-                                children.push(serviceButton(this, h, currentRowData, param.index));
+                            	let state = currentRowData.orderStatus;
+                            	if(state == 3 || state == 4 || state == 5 || state == 6 || state == 7){
+                            		children.push(serviceButton(this, h, currentRowData, param.index));
+                            	}else{
+	                            	children.push(serviceLabel(this, h, state));
+                            	}
                             }
                         });
                         return h('div', children);
