@@ -113,7 +113,7 @@ export const columns = [
         title: '订单状态',
         render: (h, params) => {
             let state = params.row.orderStatus;
-            return h('label', state===7?'已取消':(state===5||state===6?'已完成':'进行中'));
+            return h('label', state===8?'已取消':(state===-1?'待审核':(state===0?'未通过':(state===1?'已通过':(state===7||state===6?'已完成':'进行中')))));
         }
     },
     /*{

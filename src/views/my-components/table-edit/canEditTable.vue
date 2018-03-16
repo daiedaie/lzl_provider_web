@@ -43,6 +43,118 @@ const editButton = (vm, h, currentRow, index) => {
         }
     }, currentRow.editting ? '保存' : '编辑');
 };
+const refundServiceButton = (vm, h, currentRow, index) => {
+    return h('Poptip', {
+        props: {
+            confirm: true,
+            title: '您确定要此操作吗?',
+            transfer: true
+        },
+        on: {
+            'on-ok': () => {
+                vm.$emit('on-refundService', vm.handleBackdata(vm.thisTableData), index);
+            }
+        }
+    }, [
+        h('Button', {
+            style: {
+                margin: '0 5px'
+            },
+            props: {
+                type: 'error',
+                placement: 'top'
+            }
+        }, '处理请求')
+    ]);
+};
+const refundServiceLabel = (vm, h, state) => {
+	return h('label', '- -');
+};
+
+const serviceButton = (vm, h, currentRow, index) => {
+    return h('Poptip', {
+        props: {
+            confirm: true,
+            title: '您确定要售后服务吗?',
+            transfer: true
+        },
+        on: {
+            'on-ok': () => {
+                vm.$emit('on-service', vm.handleBackdata(vm.thisTableData), index);
+            }
+        }
+    }, [
+        h('Button', {
+            style: {
+                margin: '0 5px'
+            },
+            props: {
+                type: 'error',
+                placement: 'top'
+            }
+        }, '售后服务')
+    ]);
+};
+const serviceLabel = (vm, h, state) => {
+	return h('label', state==-1?'待审核':(state==0?'未通过':(state==1?'已通过':(state==2?'未付款':'已取消'))));
+};
+
+const arrivalCheckButton = (vm, h, currentRow, index) => {
+    return h('Poptip', {
+        props: {
+            confirm: true,
+            title: '您确定要此操作吗?',
+            transfer: true
+        },
+        on: {
+            'on-ok': () => {
+                vm.$emit('on-arrivalCheck', vm.handleBackdata(vm.thisTableData), index);
+            }
+        }
+    }, [
+        h('Button', {
+            style: {
+                margin: '0 5px'
+            },
+            props: {
+                type: 'error',
+                placement: 'top'
+            }
+        }, '入库验收')
+    ]);
+};
+const arrivalCheckLabel = (vm, h, state) => {
+	return h('label', '- -');
+};
+
+const arrivalButton = (vm, h, currentRow, index) => {
+    return h('Poptip', {
+        props: {
+            confirm: true,
+            title: '您确定要此操作吗?',
+            transfer: true
+        },
+        on: {
+            'on-ok': () => {
+                vm.$emit('on-arrival', vm.handleBackdata(vm.thisTableData), index);
+            }
+        }
+    }, [
+        h('Button', {
+            style: {
+                margin: '0 5px'
+            },
+            props: {
+                type: 'error',
+                placement: 'top'
+            }
+        }, '确认收货')
+    ]);
+};
+const arrivalLabel = (vm, h, state) => {
+	return h('label', '- -');
+};
+
 const checkButton = (vm, h, currentRow, index) => {
     return h('Poptip', {
         props: {
@@ -369,6 +481,37 @@ export default {
                             		children.push(checkButton(this, h, currentRowData, param.index));
                             	}else{
 	                            	children.push(checkLabel(this, h, state));
+                            	}
+                            }else if(item === 'arrival'){
+                            	let state = currentRowData.orderStatus;
+                            	if(state == 6){
+                            		children.push(arrivalButton(this, h, currentRowData, param.index));
+                            	}else{
+	                            	children.push(arrivalLabel(this, h, state));
+                            	}
+                            }else if(item === 'arrivalCheck'){
+                            	let state = currentRowData.orderStatus;
+                            	if(state == 7){
+                            		children.push(arrivalCheckButton(this, h, currentRowData, param.index));
+                            	}else{
+	                            	children.push(arrivalCheckLabel(this, h, state));
+                            	}
+                            }else if (item === 'service') {
+                            	let state = currentRowData.orderStatus;
+                            	if(state == 3 || state == 4 || state == 5 || state == 6 || state == 7 || state == 8){
+                            		children.push(serviceButton(this, h, currentRowData, param.index));
+                            	}else{
+	                            	children.push(serviceLabel(this, h, state));
+                            	}
+                            }else if(item === 'refundService'){
+                            	let state = currentRowData.orderStatus;
+                            	let active = currentRowData.active;
+                            	if(state == 3 || state == 4 || state == 5 || state == 6 || state == 7 || state == 8){
+                            		if(active == 1 || active == 2 || active == 3 || active == 4){
+                                		children.push(refundServiceButton(this, h, currentRowData, param.index));
+                                	}
+                            	}else{
+                            		children.push(refundServiceLabel(this, h, active));
                             	}
                             }
                         }); 
