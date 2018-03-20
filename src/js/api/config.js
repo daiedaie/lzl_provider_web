@@ -30,6 +30,7 @@ global.URL_GOODSATTRIBUTE = 'goodsAttribute'
 global.URL_REPOSITORY = 'repository'
 global.URL_PROVIDERORDERS = 'providerOrders'
 global.URL_PROVIDERS = 'providers'
+global.URL_GOODS = 'goods'
 
 const instance = axios.create({
   baseURL: PROJECT_URL,

@@ -37,7 +37,7 @@
 		                <Input v-model="formItem.goodsAttributeName" placeholder="请输入商品性质名称"></Input>
 		            </FormItem>
 		            <FormItem label="商品所属类别：">
-		            	<Cascader @on-change="dealCascader" :data="fatherCascader" :load-data="loadData" change-on-select placeholder="请选择分类" class="search-table ivu-input-wrapper"></Cascader>
+		            	<Cascader @on-change="dealCascader" :data="cascaderGoodsCate" change-on-select placeholder="请选择分类" class="search-table ivu-input-wrapper"></Cascader>
 		            </FormItem>
 		            <FormItem label="成本计算方法：">
 		            	<Select v-model="formItem.costCalculateMethod" style="width:160px" placeholder="成本计算方法">
@@ -91,7 +91,7 @@ export default {
       
       statusList:table.statusList,
       calculateMethodList:table.calculateMethodList,
-      fatherCascader:[],
+      cascaderGoodsCate:[],
       taxRateList:[]
     };
   },
@@ -176,20 +176,13 @@ export default {
     },
   	//请求级联下拉框数据
     handleCascader() {
-      api.get.request(URL_GOODSCATE + "/goodsCateForAttribute",{pid:0,iviewCascader:1}).then(res => {
-        this.fatherCascader = res.data
+      api.get.request(URL_GOODSCATE, {cascaderGoodsCate:1}).then(res => {
+        for(let i=0; i<res.data.length; i++){
+        	console.log(res.data[i].children);
+        }
+    	this.cascaderGoodsCate = res.data;
+        this.cascaderGoodsCate.children = res.data.children;
       });
-    },
-    //级联二级数据
-    loadData (item, callback) {
-        item.loading = true;
-        api.get.request(URL_GOODSCATE + "/goodsCateForAttribute",{pid:item.value,iviewCascader:1}).then(res => {
-            item.children = res.data
-        });
-        setTimeout(() => {
-            item.loading = false;
-            callback();
-        }, 500);
     },
   	//切换页码
     changepage(index) {

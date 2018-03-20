@@ -33,7 +33,7 @@
                 
             </Col>
         </Row>
-        <Modal :title="postOrPutTitle" v-model="modalPostOrPut" :styles="{top: '20px'}" @on-ok="postOrPutMethod" class-name="vertical-center-modal">         
+        <Modal :title="postOrPutTitle" v-model="modalPostOrPut" :styles="{top: '20px'}" class-name="vertical-center-modal">         
         	<p slot="header" style="color:#f60;text-align:center">
 	            <Icon type="android-cart" size="18" style="color: #3399ff"></Icon>
 	            <span style="font-size:18px;">采购清单</span>
@@ -45,22 +45,34 @@
 			    			<Col span="11" style="text-align: left">商品名称</Col>
 			    			<Col span="5" style="text-align: left">单价(￥)</Col>
 			    			<Col span="4" style="text-align: left">数量</Col>
-			    		</Row>
+			    		</Row><!-- <Input v-model="item.goodsName" readonly placeholder="请输入商品名称..."/> -->
 			    		<div v-for = "(item,index) in ordersGoods">  
 				    		<Row :gutter="16">
 				                <!-- 之所以新增时也显示一行，是因为 fullReductionContent的初始中有一个空对象-->
-				                <Col span="11" style="text-align: left"><Input v-model="item.goodsName" readonly placeholder="请输入商品名称..."/></Col>
+				                <Col span="11" style="text-align: left"><Cascader v-model="item.goodsName" @on-change="onCascaderChange" :data="cascaderGoodsData" trigger="hover" :render-format="format"></Cascader></Col>
 				                <Col span="5" style="text-align: left"><Input v-model="item.moneyPrice" readonly/></Col>
-				                <Col span="4" style="text-align: left"><InputNumber :max="10" :min="1" v-model="item.number"></InputNumber></Col>
+				                <Col span="4" style="text-align: left"><InputNumber @on-change="onInputNumberChange" :max="10" :min="1" v-model="item.number"></InputNumber></Col>
 					            <Col v-if="index == 0" span="4" style="text-align: left"><Button type="primary" @click="handleAdd" shape="circle" size="small">添加商品</Button></Col>
 				            	<Col v-if="index != 0" span="4" style="text-align: left"><Button type="text" @click="handleRemove(index)" shape="circle" size="small" icon="close-circled"></Button></Col>
 				            </Row>
 			            </div>
 			    	</FormItem>
+			    	<FormItem>
+			    		<Row>
+			    			<Col span="2" style="text-align: left">发票：</Col>
+			    			<Col span="4"  style="text-align: left">
+			    				<Select v-model="invoiceStatus" placeholder="请选择">
+					    			<Option v-for="item in invoiceStatusList" :value="item.value" :key="item.value">{{item.label}}</Option>
+					    		</Select>
+			    			</Col>
+			    			<Col span="3" offset="10" style="text-align: right">总金额：￥</Col>
+			    			<Col span="2" style="text-align: left">{{this.totalMoney}}</Col>
+			    		</Row>
+			    	</FormItem>
 			   	</Form>
 	        </div>
 	        <div slot="footer">
-	            <Button type="error" @click="post">确认</Button>
+	            <Button type="error" @click="postCart">确认</Button>
 	        </div>
         </Modal>
         <Modal v-model="refundTypeModal" width="360">
@@ -88,6 +100,7 @@
 </template>
 
 <script>
+import Vue from 'vue';
 import * as table from "./data/search";
 import instance from '../../../api/index';
 import canEditTable from '../../my-components/table-edit/canEditTable.vue';
@@ -116,15 +129,29 @@ export default {
       refundTypeModal:false,
       refundType:"",
       
+      cascaderGoodsData:[],
+      
       formItem:{},
       ordersGoods:[
     	  {
-    		  goodsName:"",
-    		  moneyPrice:"",
-    		  number:""
+    		  goodsName:[],
+    		  moneyPrice:'',
+    		  number:0
     	  }
       ],
+      invoiceStatus:'',
+      totalMoney:"",
       
+      invoiceStatusList: [
+          {
+              value: 1,
+              label: '需要'
+          },
+          {
+              value: 0,
+              label: '不需要'
+          }
+      ],
       orderStatusList: [
           {
               value: '',
@@ -188,6 +215,14 @@ export default {
     //初始化
     init() {
       this.handleSearch();
+    }, 
+    format (labels, selectedData) {
+    	const index = labels.length - 1;
+        const data = selectedData[index] || false;
+        if (data && data.label) {
+            return labels[index];
+        }
+        return labels[index];
     },
     //请求数据
     handleSearch() {
@@ -202,11 +237,12 @@ export default {
         startTime:this.searchStartDate,
         endTime:this.searchEndDate
       };
-      console.log(params);
+      
+      this.handleCascader();
       //response数据处理
       api.get.request(URL_PROVIDERORDERS, params).then(res => {
         if(res.data){
-            this.data = res.data
+            this.data = res.data;
         }else{
             this.data = [];
             this.pageIndex=1;
@@ -218,8 +254,18 @@ export default {
     toPost() {
     	this.modalPostOrPut =true;
     },
-    post() {
-    	alert("成功");
+    postCart() {
+    	//let ordersGoods = JSON.stringify(this.ordersGoods);
+    	let params = {
+    		"ordersGoods":this.ordersGoods,
+    		"invoiceStatus":this.invoiceStatus,
+    		"totalMoney":this.totalMoney
+    	};
+    	let codconfirm_remark = JSON.stringify(params);
+    	api.post.request(URL_PROVIDERORDERS, {"codconfirm_remark" : codconfirm_remark}).then(res => {
+    		this.handleSearch();
+        });
+    	this.modalPostOrPut =false;
     },
   	//添加购买商品
     handleAdd() {
@@ -243,6 +289,62 @@ export default {
     changepage(index) {
       this.pageIndex = index;
       this.handleSearch();
+    },
+  	//请求级联下拉框数据 
+    handleCascader() {
+      api.get.request(URL_GOODSCATE, {cascaderGoodsCate:1, cascaderGoods:2}).then(res => {
+        this.cascaderGoodsData = res.data;
+        for(let i=0; i<res.data.length; i++){
+	        for(let j=0; j<res.data[i].children.length; j++){
+	        	if(res.data[i].children[j].goodsChildren != null && res.data[i].children[j].goodsChildren.length > 0){
+		        	this.cascaderGoodsData[i].children[j].children = res.data[i].children[j].goodsChildren;
+		        }
+	        }
+        }
+      });
+    },
+    onCascaderChange(value, selectedData) {
+    	let goodsId = value[value.length - 1];
+    	//let goodsId = this.ordersGoods[index].goodsName.toString().substring(this.ordersGoods[index].goodsName.toString().lastIndexOf(",") + 1); //加1 很重要
+    	let goods = [];
+    	let index = "";
+    	api.get.request(URL_GOODS, {goodsId : goodsId}).then(res => {
+            if(res.data){
+                goods = res.data;
+            }else{
+            	goods = [];
+            }
+        });
+    	//alert(this.ordersGoods.length);//1  该1是默认的初始化值  × 不是初始化值，此处v-model已将其赋值
+   		//不延时，有时获取不到goods
+    	setTimeout(() => {
+   				for(let i=0; i<this.ordersGoods.length; i++){
+   		       		if(goodsId == this.ordersGoods[i].goodsName.toString().substring(this.ordersGoods[i].goodsName.toString().lastIndexOf(",") + 1)){
+   		       			index = i;break;
+   		       		}
+   		       	}
+   		    	//alert(this.ordersGoods[0].goodsName).toString();//10,1021,19
+   		    	Vue.set(this.ordersGoods, index, {
+   		    		goodsName:this.ordersGoods[index].goodsName, //此处v-model已将其赋值
+   		    		moneyPrice:goods[0].price,
+   		    		number:1
+   		    	})
+   		   		//初始添加时更新总金额
+   		    	let temp = 0;
+   		    	for(let i=0; i<this.ordersGoods.length; i++){
+   		    		temp += this.ordersGoods[i].moneyPrice * this.ordersGoods[i].number;
+   		    	}
+   		    	this.totalMoney = temp;
+   		},500); 
+    	
+    },
+    //时刻更新总金额
+    onInputNumberChange() {
+    	let temp = 0;
+    	for(let i=0; i<this.ordersGoods.length; i++){
+    		temp += this.ordersGoods[i].moneyPrice * this.ordersGoods[i].number;
+    	}
+    	this.totalMoney = temp;
     },
     //切换页码大小
     changeSize(size) {
