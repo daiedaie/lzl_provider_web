@@ -49,7 +49,7 @@
 			    		<div v-for = "(item,index) in ordersGoods">  
 				    		<Row :gutter="16">
 				                <!-- 之所以新增时也显示一行，是因为 fullReductionContent的初始中有一个空对象-->
-				                <Col span="11" style="text-align: left"><Cascader v-model="item.goodsName" @on-change="onCascaderChange" :data="cascaderGoodsData" trigger="hover" :render-format="format"></Cascader></Col>
+				                <Col span="11" style="text-align: left"><Cascader v-model="item.goodsName" @on-change="onCascaderChange(index)" :data="cascaderGoodsData" trigger="hover" :render-format="format"></Cascader></Col>
 				                <Col span="5" style="text-align: left"><Input v-model="item.moneyPrice" readonly/></Col>
 				                <Col span="4" style="text-align: left"><InputNumber @on-change="onInputNumberChange" :max="10" :min="1" v-model="item.number"></InputNumber></Col>
 					            <Col v-if="index == 0" span="4" style="text-align: left"><Button type="primary" @click="handleAdd" shape="circle" size="small">添加商品</Button></Col>
@@ -215,6 +215,7 @@ export default {
     //初始化
     init() {
       this.handleSearch();
+      this.handleCascader();
     }, 
     format (labels, selectedData) {
     	const index = labels.length - 1;
@@ -238,7 +239,6 @@ export default {
         endTime:this.searchEndDate
       };
       
-      this.handleCascader();
       //response数据处理
       api.get.request(URL_PROVIDERORDERS, params).then(res => {
         if(res.data){
@@ -256,13 +256,15 @@ export default {
     },
     postCart() {
     	//let ordersGoods = JSON.stringify(this.ordersGoods);
+    	//alert(ordersGoods);
     	let params = {
     		"ordersGoods":this.ordersGoods,
     		"invoiceStatus":this.invoiceStatus,
     		"totalMoney":this.totalMoney
     	};
-    	let codconfirm_remark = JSON.stringify(params);
-    	api.post.request(URL_PROVIDERORDERS, {"codconfirm_remark" : codconfirm_remark}).then(res => {
+    	let codconfirmRemark = JSON.stringify(params);
+    	alert(codconfirmRemark);
+    	api.post.request(URL_PROVIDERORDERS, {"codconfirmRemark" : codconfirmRemark}).then(res => {
     		this.handleSearch();
         });
     	this.modalPostOrPut =false;
@@ -280,6 +282,12 @@ export default {
     //去除购买商品
     handleRemove(index) {
     	this.ordersGoods.splice(index,1);
+    	//删除添加时更新总金额
+    	let temp = 0;
+    	for(let i=0; i<this.ordersGoods.length; i++){
+    		temp += this.ordersGoods[i].moneyPrice * this.ordersGoods[i].number;
+    	}
+    	this.totalMoney = temp;
     },
   	//将售后服务类型设置到this.refundType中
     radioGroupOnChange(radioLabel) {
@@ -300,14 +308,16 @@ export default {
 		        	this.cascaderGoodsData[i].children[j].children = res.data[i].children[j].goodsChildren;
 		        }
 	        }
-        }
+        } 
       });
     },
-    onCascaderChange(value, selectedData) {
-    	let goodsId = value[value.length - 1];
-    	//let goodsId = this.ordersGoods[index].goodsName.toString().substring(this.ordersGoods[index].goodsName.toString().lastIndexOf(",") + 1); //加1 很重要
+    onCascaderChange(index) {
+    	//cascader选择后，数据的双向绑定要迟一些，cascader级联选择有bug。还有下面的赋值也是的，都要延迟一会，数据的双向绑定出了问题
+    	let goodsId = "";
+    	setTimeout(() => {
+	    	goodsId = this.ordersGoods[index].goodsName.toString().substring(this.ordersGoods[index].goodsName.toString().lastIndexOf(",") + 1); //加1 很重要
+    	},1000);
     	let goods = [];
-    	let index = "";
     	api.get.request(URL_GOODS, {goodsId : goodsId}).then(res => {
             if(res.data){
                 goods = res.data;
@@ -318,25 +328,19 @@ export default {
     	//alert(this.ordersGoods.length);//1  该1是默认的初始化值  × 不是初始化值，此处v-model已将其赋值
    		//不延时，有时获取不到goods
     	setTimeout(() => {
-   				for(let i=0; i<this.ordersGoods.length; i++){
-   		       		if(goodsId == this.ordersGoods[i].goodsName.toString().substring(this.ordersGoods[i].goodsName.toString().lastIndexOf(",") + 1)){
-   		       			index = i;break;
-   		       		}
-   		       	}
-   		    	//alert(this.ordersGoods[0].goodsName).toString();//10,1021,19
-   		    	Vue.set(this.ordersGoods, index, {
-   		    		goodsName:this.ordersGoods[index].goodsName, //此处v-model已将其赋值
-   		    		moneyPrice:goods[0].price,
-   		    		number:1
-   		    	})
-   		   		//初始添加时更新总金额
-   		    	let temp = 0;
-   		    	for(let i=0; i<this.ordersGoods.length; i++){
-   		    		temp += this.ordersGoods[i].moneyPrice * this.ordersGoods[i].number;
-   		    	}
-   		    	this.totalMoney = temp;
-   		},500); 
-    	
+				//alert(this.ordersGoods[0].goodsName).toString();//10,1021,19
+		    	Vue.set(this.ordersGoods, index, {
+		    		goodsName:this.ordersGoods[index].goodsName, //此处v-model已将其赋值
+		    		moneyPrice:goods[0].price,
+		    		number:1
+		    	})
+		   		//初始添加时更新总金额
+		    	let temp = 0;
+		    	for(let i=0; i<this.ordersGoods.length; i++){
+		    		temp += this.ordersGoods[i].moneyPrice * this.ordersGoods[i].number;
+		    	}
+		    	this.totalMoney = temp;
+		},700);
     },
     //时刻更新总金额
     onInputNumberChange() {
